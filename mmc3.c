@@ -62,7 +62,7 @@ void __fastcall__ mmc3_famitone_update_nmi(void) {
 #ifdef DEBUG
 #include <stdio.h>
 void nop(void) {}
-void __fastcall__ error(index8_t r, index8_t n) {
+void __fastcall__ error(uint8_t r, uint8_t n) {
   char info[24];
 
   ppu_off();
@@ -142,35 +142,35 @@ void __fastcall__ mmc3_pop_code_bank(void) {
 // Trampoline functions - Banked calls must always come from the fixed bank
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void __fastcall__ call(index8_t bank, void (*fn)(void)) {
+void __fastcall__ call(uint8_t bank, void (*fn)(void)) {
   CALL(bank, fn);
 }
 
-void __fastcall__ call_i8(index8_t bank, void (*fn)(int8_t), int8_t i8) {
+void __fastcall__ call_i8(uint8_t bank, void (*fn)(int8_t), int8_t i8) {
   CALL_WITH_ARGS(bank, fn, i8);
 }
 
-void __fastcall__ call_ptr(index8_t bank, void (*fn)(void*), void * ptr) {
+void __fastcall__ call_ptr(uint8_t bank, void (*fn)(void*), void * ptr) {
   CALL_WITH_ARGS(bank, fn, ptr);
 }
 
-void __fastcall__ call_u8(index8_t bank, void (*fn)(uint8_t), uint8_t a8) {
+void __fastcall__ call_u8(uint8_t bank, void (*fn)(uint8_t), uint8_t a8) {
   CALL_WITH_ARGS(bank, fn, a8);
 }
 
-void __fastcall__ call_u8_u8(index8_t bank, void (*fn)(uint8_t, uint8_t), uint8_t a8, uint8_t b8) {
+void __fastcall__ call_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t), uint8_t a8, uint8_t b8) {
   CALL_WITH_ARGS(bank, fn, a8, b8);
 }
 
-void __fastcall__ call_u8_u8_u8(index8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8) {
+void __fastcall__ call_u8_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8) {
   CALL_WITH_ARGS(bank, fn, a8, b8, c8);
 }
 
-void __fastcall__ call_u8_u8_u8_u8(index8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8, uint8_t d8) {
+void __fastcall__ call_u8_u8_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8, uint8_t d8) {
   CALL_WITH_ARGS(bank, fn, a8, b8, c8, d8);
 }
 
-void __fastcall__ call_u8_u8_u8_u8_u8(index8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8, uint8_t d8, uint8_t e8) {
+void __fastcall__ call_u8_u8_u8_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8, uint8_t d8, uint8_t e8) {
   CALL_WITH_ARGS(bank, fn, a8, b8, c8, d8, e8);
 
 }

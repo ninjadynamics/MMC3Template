@@ -1,6 +1,9 @@
 #ifndef _CORE_H
 #define _CORE_H
 
+#include <stdint.h>
+#include "neslib.h"
+
 // CHR Banks
 #define CHR_DEFAULT    0
 
@@ -22,6 +25,18 @@
 #define DATA_14       14
 #define DATA_15       15
 #define DATA_16       16
+
+// Music banks
+#define MUSIC_01      17
+#define MUSIC_02      18
+#define MUSIC_03      19
+#define MUSIC_04      20
+
+// Sound effect banks
+#define SOUND_01      21
+#define SOUND_02      22
+#define SOUND_03      23
+#define SOUND_04      24
 
 // Code Banks
 #define CODE_XTD      52
