@@ -71,17 +71,17 @@ void __fastcall__ error(uint8_t r, uint8_t n) {
   nmi_set_callback(nop);
   set_vram_update(NULL);
 
-  MMC3_CHR_1000(CHR_TEXT_A    );
-  MMC3_CHR_1400(CHR_TEXT_A + 1);
-  MMC3_CHR_1800(CHR_TEXT_A + 2);
-  MMC3_CHR_1C00(CHR_TEXT_A + 3);
+  MMC3_CHR_1000(CHR_DEFAULT    );
+  MMC3_CHR_1400(CHR_DEFAULT + 1);
+  MMC3_CHR_1800(CHR_DEFAULT + 2);
+  MMC3_CHR_1C00(CHR_DEFAULT + 3);
 
   vram_adr(0x2000);
   vram_fill(NULL, 1024);
-  pal_col(0,0x02); // set screen to dark blue
-  pal_col(1,0x14); // fuchsia
-  pal_col(2,0x20); // grey
-  pal_col(3,0x30); // white
+  pal_col(0,0x02); // Set screen to dark blue
+  pal_col(1,0x14); // Fuchsia
+  pal_col(2,0x20); // Grey
+  pal_col(3,0x30); // White
 
   snprintf(info, 24, "Reg: 0x%02X / Bank: 0x%02X", r, n);
   vram_adr(NTADR_A(2, 2));
@@ -97,9 +97,9 @@ void __fastcall__ error(uint8_t r, uint8_t n) {
 
 void __fastcall__ mmc3_push_data_bank(void) {
   ++active_data_bank_index;
-	#ifdef DEBUG
-	if (active_data_bank_index >= 8) error(6, mmc3_bank_num);
-	#endif
+  #ifdef DEBUG
+  if (active_data_bank_index >= 8) error(6, mmc3_bank_num);
+  #endif
   active_data_bank[active_data_bank_index] = mmc3_bank_num;
   mmc3_register = 6;
   mmc3_cpu_bank = mmc3_bank_num;
@@ -108,9 +108,9 @@ void __fastcall__ mmc3_push_data_bank(void) {
 
 void __fastcall__ mmc3_push_code_bank(void) {
   ++active_code_bank_index;
-	#ifdef DEBUG
-	if (active_code_bank_index >= 8) error(6, mmc3_bank_num);
-	#endif
+  #ifdef DEBUG
+  if (active_code_bank_index >= 8) error(6, mmc3_bank_num);
+  #endif
   active_code_bank[active_code_bank_index] = mmc3_bank_num;
   mmc3_register = 7;
   mmc3_cpu_bank = mmc3_bank_num;
@@ -118,9 +118,9 @@ void __fastcall__ mmc3_push_code_bank(void) {
 }
 
 void __fastcall__ mmc3_pop_data_bank(void) {
-	#ifdef DEBUG
+  #ifdef DEBUG
   if (active_data_bank_index == 0) error(6, mmc3_bank_num);
-	#endif
+  #endif
   --active_data_bank_index;
   mmc3_bank_num = active_data_bank[active_data_bank_index];
   mmc3_register = 6;
@@ -129,9 +129,9 @@ void __fastcall__ mmc3_pop_data_bank(void) {
 }
 
 void __fastcall__ mmc3_pop_code_bank(void) {
-	#ifdef DEBUG
+  #ifdef DEBUG
   if (active_code_bank_index == 0) error(6, mmc3_bank_num);
-	#endif
+  #endif
   --active_code_bank_index;
   mmc3_bank_num = active_code_bank[active_code_bank_index];
   mmc3_register = 7;
@@ -172,6 +172,5 @@ void __fastcall__ call_u8_u8_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t, ui
 
 void __fastcall__ call_u8_u8_u8_u8_u8(uint8_t bank, void (*fn)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t), uint8_t a8, uint8_t b8, uint8_t c8, uint8_t d8, uint8_t e8) {
   CALL_WITH_ARGS(bank, fn, a8, b8, c8, d8, e8);
-
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
