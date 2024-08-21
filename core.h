@@ -368,4 +368,7 @@
 #define _STR(s) #s
 #define STR(s) _STR(s)
 
+// Bool
+typedef enum { false, true } bool;
+
 #endif // core.h

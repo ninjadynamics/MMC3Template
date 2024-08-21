@@ -20,6 +20,7 @@
 //#resource "music_rain.s"
 //#resource "sfx.s"
 //
+//#link "mouse.c"
 //#link "mmc3.c"
 //#link "crt0.s"
 //
@@ -28,6 +29,36 @@
 #include "core.h"
 #include "mmc3.h"
 #include "neslib.h"
+#include "mouse.h"
+
+void __fastcall__ show_status(void) {
+  #define X(x) (x * 8)
+  #define Y(y) (y * 8) - 1
+  uint8_t v[3];
+  // - - - - - - - - - - - - - - - - - -
+  v[0] = '0' + (mouse_x / 100);
+  v[1] = '0' + (mouse_x % 100 / 10);
+  v[2] = '0' + (mouse_x % 10);
+  oam_spr(X(4), Y(2), v[0], 1);
+  oam_spr(X(5), Y(2), v[1], 1);
+  oam_spr(X(6), Y(2), v[2], 1);
+  // - - - - - - - - - - - - - - - - - -
+  v[0] = '0' + (mouse_y / 100);
+  v[1] = '0' + (mouse_y % 100 / 10);
+  v[2] = '0' + (mouse_y % 10);
+  oam_spr(X(4), Y(4), v[0], 1);
+  oam_spr(X(5), Y(4), v[1], 1);
+  oam_spr(X(6), Y(4), v[2], 1);
+  // - - - - - - - - - - - - - - - - - -
+  oam_spr(X(26), Y(2), mouse_left * 0x7F, 3);
+  oam_spr(X(29), Y(2), mouse_right * 0x7F, 2);
+  #undef X
+  #undef Y
+}
+
+void __fastcall__ show_cursor(void) {
+  oam_spr(mouse_x, mouse_y - 1, 0x80, 0);
+}
 
 void main(void) {
 
@@ -62,15 +93,41 @@ void main(void) {
   FAMITONE_MUSIC_INIT(NULL);
   FAMITONE_SFX_INIT(NULL);
 
-  // Draw message
-  vram_adr(NTADR_A(2,2));
-  vram_write("HELLO, WORLD!", 13);
+  // Draw static text
+  #define TEXT "X:"
+  vram_adr(NTADR_A(2, 2));
+  vram_write(TEXT, sizeof(TEXT));
+  #undef TEXT
+
+  #define TEXT "Y:"
+  vram_adr(NTADR_A(2, 4));
+  vram_write(TEXT, sizeof(TEXT));
+  #undef TEXT
+
+  #define TEXT "[ ][ ]"
+  vram_adr(NTADR_A(25, 2));
+  vram_write(TEXT, sizeof(TEXT));
+  #undef TEXT
+
+  #define TEXT "HELLO WORLD!"
+  vram_adr(NTADR_A(2, 26));
+  vram_write(TEXT, sizeof(TEXT));
+  #undef TEXT
 
   // Enable rendering
   ppu_on_all();
 
   // Main loop
+  #define MIDDLE_SCREEN_X (256 / 2) - 4
+  #define MIDDLE_SCREEN_Y (240 / 2) - 4
+  init_mouse(MIDDLE_SCREEN_X, MIDDLE_SCREEN_Y);
+  #undef MIDDLE_SCREEN_X
+  #undef MIDDLE_SCREEN_Y
   while (1) {
-    // ...
+    oam_clear();
+    read_mouse();
+    show_cursor();
+    show_status();
+    ppu_wait_nmi();
   }
 }
