@@ -1,7 +1,13 @@
 #include "mouse.h"
 #include <peekpoke.h>
 
-#define MOUSE_PORT 0x4016
+#define LATCH_PORT 0x4016
+#define DATA_PORT1 0x4016
+#define DATA_PORT2 0x4017
+
+// If the mouse is connected on the second
+// controller port, use DATA_PORT2 instead
+#define MOUSE_PORT DATA_PORT1
 
 #pragma bss-name (push, "ZEROPAGE")
 uint8_t mouse_x;
@@ -25,8 +31,8 @@ void __fastcall__ init_mouse(uint8_t x, uint8_t y) {
 
 bool __fastcall__ read_mouse(void) {
   // Latch the data by turning the latch on and off
-  POKE(MOUSE_PORT, 1);
-  POKE(MOUSE_PORT, 0);
+  POKE(LATCH_PORT, 1);
+  POKE(LATCH_PORT, 0);
 
   // Read 32 bits from the mouse into the report array
   for (i = 0; i < 32; ++i) {
