@@ -61,7 +61,7 @@ bool __fastcall__ read_mouse(void) {
   }
 
   // At this point, x_velocity and y_velocity contain the displacement values
-  // left_button and right_button contain the button states (1 = pressed, 0 = not pressed)
+  // mouse_left and mouse_right contain the button states (1 = pressed, 0 = not pressed)
 
   // Update the cursor X position
   if (x_velocity) {
