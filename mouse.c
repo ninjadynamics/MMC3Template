@@ -21,7 +21,7 @@ static uint8_t new_x, new_y;
 static int8_t x_velocity;
 static int8_t y_velocity;
 static uint8_t report[4];
-static uint8_t i, t, bit;
+static uint8_t bit;
 #pragma bss-name (pop)
 
 void __fastcall__ init_mouse(uint8_t x, uint8_t y) {
@@ -33,13 +33,32 @@ bool __fastcall__ read_mouse(void) {
   // Latch the data by turning the latch on and off
   POKE(LATCH_PORT, 1);
   POKE(LATCH_PORT, 0);
+  
+  // Delay 2 CPU cycles
+  __asm__("nop");
 
-  // Read 32 bits from the mouse into the report array
-  for (i = 0; i < 32; ++i) {
-    // Shift and insert bit into the correct byte
-    bit = PEEK(MOUSE_PORT) & 0x01; t = i >> 3;
-    report[t] = (report[t] << 1) | bit;
-  }
+  // Read 32 bits from the mouse into the
+  // report array using an unrolled loop
+  #define LOOP_CODE(_i) \
+    bit = PEEK(MOUSE_PORT) & 0x01; \
+    report[0] = (report[0] << 1) | bit;
+  LOOP(8); // First byte
+  #undef LOOP_CODE
+  #define LOOP_CODE(_i) \
+    bit = PEEK(MOUSE_PORT) & 0x01; \
+    report[1] = (report[1] << 1) | bit;
+  LOOP(8); // Second byte
+  #undef LOOP_CODE
+  #define LOOP_CODE(_i) \
+    bit = PEEK(MOUSE_PORT) & 0x01; \
+    report[2] = (report[2] << 1) | bit;
+  LOOP(8); // Third byte
+  #undef LOOP_CODE
+  #define LOOP_CODE(_i) \
+    bit = PEEK(MOUSE_PORT) & 0x01; \
+    report[3] = (report[3] << 1) | bit;
+  LOOP(8); // Fourth byte
+  #undef LOOP_CODE
 
   // Check if the mouse is connected
   if ((report[1] & 0x0F) != 0x01) return false;
