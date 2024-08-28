@@ -36,28 +36,28 @@ void __fastcall__ show_status(void) {
   #define Y(y) (y * 8) - 1
   uint8_t v[3];
   // - - - - - - - - - - - - - - - - - -
-  v[0] = '0' + (mouse_x / 100);
-  v[1] = '0' + (mouse_x % 100 / 10);
-  v[2] = '0' + (mouse_x % 10);
+  v[0] = '0' + (mouse.x / 100);
+  v[1] = '0' + (mouse.x % 100 / 10);
+  v[2] = '0' + (mouse.x % 10);
   oam_spr(X(4), Y(2), v[0], 1);
   oam_spr(X(5), Y(2), v[1], 1);
   oam_spr(X(6), Y(2), v[2], 1);
   // - - - - - - - - - - - - - - - - - -
-  v[0] = '0' + (mouse_y / 100);
-  v[1] = '0' + (mouse_y % 100 / 10);
-  v[2] = '0' + (mouse_y % 10);
+  v[0] = '0' + (mouse.y / 100);
+  v[1] = '0' + (mouse.y % 100 / 10);
+  v[2] = '0' + (mouse.y % 10);
   oam_spr(X(4), Y(4), v[0], 1);
   oam_spr(X(5), Y(4), v[1], 1);
   oam_spr(X(6), Y(4), v[2], 1);
   // - - - - - - - - - - - - - - - - - -
-  oam_spr(X(26), Y(2), mouse_left * 0x7F, 3);
-  oam_spr(X(29), Y(2), mouse_right * 0x7F, 2);
+  oam_spr(X(26), Y(2), mouse.left.press * 0x7F, 3);
+  oam_spr(X(29), Y(2), mouse.right.press * 0x7F, 2);
   #undef X
   #undef Y
 }
 
 void __fastcall__ show_cursor(void) {
-  oam_spr(mouse_x, mouse_y - 1, 0x80, 0);
+  oam_spr(mouse.x, mouse.y - 1, 0x80, 0);
 }
 
 void main(void) {
@@ -120,12 +120,12 @@ void main(void) {
   // Main loop
   #define MIDDLE_SCREEN_X (256 / 2) - 4
   #define MIDDLE_SCREEN_Y (240 / 2) - 4
-  init_mouse(MIDDLE_SCREEN_X, MIDDLE_SCREEN_Y);
+  mouse_init(MIDDLE_SCREEN_X, MIDDLE_SCREEN_Y);
   #undef MIDDLE_SCREEN_X
   #undef MIDDLE_SCREEN_Y
   while (1) {
     oam_clear();
-    read_mouse();
+    mouse_update();
     show_cursor();
     show_status();
     ppu_wait_nmi();

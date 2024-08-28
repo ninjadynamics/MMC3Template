@@ -1,4 +1,5 @@
 #include "mouse.h"
+
 #include <peekpoke.h>
 
 #define LATCH_PORT 0x4016
@@ -8,12 +9,11 @@
 // If the mouse is connected on the second
 // controller port, use DATA_PORT2 instead
 #define MOUSE_PORT DATA_PORT1
+// NOTE: If you wish to autodetect the mouse port or
+// make configurable, you can use a variable instead
 
 #pragma bss-name (push, "ZEROPAGE")
-uint8_t mouse_x;
-uint8_t mouse_y;
-bool mouse_left;
-bool mouse_right;
+Mouse mouse;
 #pragma bss-name (pop)
 
 #pragma bss-name (push, "ZEROPAGE")
@@ -22,18 +22,30 @@ static int8_t x_velocity;
 static int8_t y_velocity;
 static uint8_t report[4];
 static uint8_t bit;
+static bool p_left;
+static bool p_right;
 #pragma bss-name (pop)
 
-void __fastcall__ init_mouse(uint8_t x, uint8_t y) {
-  mouse_x = x;
-  mouse_y = y;
+void __fastcall__ mouse_clear(void) {
+  p_left = false;
+  p_right = false;
+  mouse.left.press = false;
+  mouse.left.click = false;
+  mouse.right.press = false;
+  mouse.right.click = false;
 }
 
-bool __fastcall__ read_mouse(void) {
+void __fastcall__ mouse_init(uint8_t x, uint8_t y) {
+  mouse_clear();
+  mouse.x = x;
+  mouse.y = y;
+}
+
+void __fastcall__ mouse_update(void) {
   // Latch the data by turning the latch on and off
   POKE(LATCH_PORT, 1);
   POKE(LATCH_PORT, 0);
-  
+
   // Delay 2 CPU cycles
   __asm__("nop");
 
@@ -49,6 +61,13 @@ bool __fastcall__ read_mouse(void) {
     report[1] = (report[1] << 1) | bit;
   LOOP(8); // Second byte
   #undef LOOP_CODE
+
+  // Set mouse connection state
+  if ((report[1] & 0x0F) != 0x01) {
+    mouse.connected = false;
+    return; // - - - - - - - - - - - - - - - - - - -
+  }
+
   #define LOOP_CODE(_i) \
     bit = PEEK(MOUSE_PORT) & 0x01; \
     report[2] = (report[2] << 1) | bit;
@@ -60,12 +79,17 @@ bool __fastcall__ read_mouse(void) {
   LOOP(8); // Fourth byte
   #undef LOOP_CODE
 
-  // Check if the mouse is connected
-  if ((report[1] & 0x0F) != 0x01) return false;
-
   // Extract button states
-  mouse_left = (report[1] >> 6) & 0x01;
-  mouse_right = (report[1] >> 7) & 0x01;
+  mouse.left.press = (report[1] >> 6) & 0x01;
+  mouse.right.press = (report[1] >> 7) & 0x01;
+
+  // Set left-click state
+  mouse.left.click = (mouse.left.press && !p_left);
+  p_left = mouse.left.press;
+
+  // Set right-click state
+  mouse.right.click = (mouse.right.press && !p_right);
+  p_right = mouse.right.press;
 
   // Convert vertical displacement to two's complement
   y_velocity = report[2] & 0x7F;
@@ -80,30 +104,30 @@ bool __fastcall__ read_mouse(void) {
   }
 
   // At this point, x_velocity and y_velocity contain the displacement values
-  // mouse_left and mouse_right contain the button states (1 = pressed, 0 = not pressed)
+  // mouse.left and mouse.right contain the button states (1 = pressed, 0 = not pressed)
 
   // Update the cursor X position
   if (x_velocity) {
-    new_x = mouse_x + x_velocity;
+    new_x = mouse.x + x_velocity;
     if (x_velocity > 0) {
-      mouse_x = new_x < MAX_X && new_x > mouse_x ? new_x : MAX_X;
+      mouse.x = new_x < MAX_X && new_x > mouse.x ? new_x : MAX_X;
     }
     else {
-      mouse_x = new_x > MIN_X && new_x < mouse_x ? new_x : MIN_X;
+      mouse.x = new_x > MIN_X && new_x < mouse.x ? new_x : MIN_X;
     }
   }
 
   // Update the cursor Y position
   if (y_velocity) {
-    new_y = mouse_y + y_velocity;
+    new_y = mouse.y + y_velocity;
     if (y_velocity > 0) {
-      mouse_y = new_y < MAX_Y && new_y > mouse_y ? new_y : MAX_Y;
+      mouse.y = new_y < MAX_Y && new_y > mouse.y ? new_y : MAX_Y;
     }
     else {
-      mouse_y = new_y > MIN_Y && new_y < mouse_y ? new_y : MIN_Y;
+      mouse.y = new_y > MIN_Y && new_y < mouse.y ? new_y : MIN_Y;
     }
   }
 
-  // Done
-  return true;
+  // Set mouse connection state
+  mouse.connected = true;
 }
