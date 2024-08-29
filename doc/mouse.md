@@ -140,7 +140,3 @@ void main(void) {
 - The mouse module uses unrolled loops and assembly NOP instructions to ensure proper timing when reading from the mouse. This ensures compatibility with different mouse models, including the Hyperkin mouse.
 - The module currently assumes the mouse is connected to port 1. To use port 2, change the `MOUSE_PORT` definition or introduce a configuration setting to select the port at runtime.
 - This module is designed for the NES environment, where direct hardware access and precise timing are critical.
-
-## Conclusion
-
-The `mouse` module provides a simple and efficient way to handle mouse input on an NES system. It abstracts the complexity of reading raw mouse data, offering easy-to-use functions and structures for managing mouse state. This documentation should provide sufficient information for integrating and using the mouse module in your NES projects.
