@@ -46,21 +46,31 @@ void __fastcall__ mouse_update(void) {
   POKE(LATCH_PORT, 1);
   POKE(LATCH_PORT, 0);
 
-  // Delay 2 CPU cycles
+  // Wait 2 CPU cycles
   __asm__("nop");
 
-  // Read 32 bits from the mouse into the
-  // report array using an unrolled loop
+  // Read 32 bits from the mouse into the report array using unrolled loops
+  // NOTE: Each read should take at least 14 CPU cycles, so make sure to check
+  //       the compiler listings and add asm "nop" instructions if necessary!
+
+  // Get the first byte
   #define LOOP_CODE(_i) \
     bit = PEEK(MOUSE_PORT) & 0x01; \
     report[0] = (report[0] << 1) | bit;
-  LOOP(8); // First byte
+  LOOP(8);
   #undef LOOP_CODE
+
+  // Get the second byte
   #define LOOP_CODE(_i) \
     bit = PEEK(MOUSE_PORT) & 0x01; \
     report[1] = (report[1] << 1) | bit;
-  LOOP(8); // Second byte
+  LOOP(8);
   #undef LOOP_CODE
+
+  // Wait a few more CPU cycles for
+  // Hyperkin mouse compatibility
+  __asm__("nop"); __asm__("nop");
+  __asm__("nop"); __asm__("nop");
 
   // Set mouse connection state
   if ((report[1] & 0x0F) != 0x01) {
@@ -68,15 +78,18 @@ void __fastcall__ mouse_update(void) {
     return; // - - - - - - - - - - - - - - - - - - -
   }
 
+  // Get the third byte
   #define LOOP_CODE(_i) \
     bit = PEEK(MOUSE_PORT) & 0x01; \
     report[2] = (report[2] << 1) | bit;
-  LOOP(8); // Third byte
+  LOOP(8);
   #undef LOOP_CODE
+
+  // Get the fourth byte
   #define LOOP_CODE(_i) \
     bit = PEEK(MOUSE_PORT) & 0x01; \
     report[3] = (report[3] << 1) | bit;
-  LOOP(8); // Fourth byte
+  LOOP(8);
   #undef LOOP_CODE
 
   // Extract button states
