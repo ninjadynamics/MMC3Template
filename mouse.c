@@ -21,7 +21,6 @@ static uint8_t new_x, new_y;
 static int8_t x_velocity;
 static int8_t y_velocity;
 static uint8_t report[4];
-static uint8_t bit;
 static bool p_left;
 static bool p_right;
 #pragma bss-name (pop)
@@ -55,15 +54,17 @@ void __fastcall__ mouse_update(void) {
 
   // Get the first byte
   #define LOOP_CODE(_i) \
-    bit = PEEK(MOUSE_PORT) & 0x01; \
-    report[0] = (report[0] << 1) | bit;
+    __asm__("LDA %w", MOUSE_PORT); \
+    __asm__("LSR A"); \
+    __asm__("ROL %v+0", report);
   LOOP(8);
   #undef LOOP_CODE
 
   // Get the second byte
   #define LOOP_CODE(_i) \
-    bit = PEEK(MOUSE_PORT) & 0x01; \
-    report[1] = (report[1] << 1) | bit;
+    __asm__("LDA %w", MOUSE_PORT); \
+    __asm__("LSR A"); \
+    __asm__("ROL %v+1", report);
   LOOP(8);
   #undef LOOP_CODE
 
@@ -80,15 +81,17 @@ void __fastcall__ mouse_update(void) {
 
   // Get the third byte
   #define LOOP_CODE(_i) \
-    bit = PEEK(MOUSE_PORT) & 0x01; \
-    report[2] = (report[2] << 1) | bit;
+    __asm__("LDA %w", MOUSE_PORT); \
+    __asm__("LSR A"); \
+    __asm__("ROL %v+2", report);
   LOOP(8);
   #undef LOOP_CODE
 
   // Get the fourth byte
   #define LOOP_CODE(_i) \
-    bit = PEEK(MOUSE_PORT) & 0x01; \
-    report[3] = (report[3] << 1) | bit;
+    __asm__("LDA %w", MOUSE_PORT); \
+    __asm__("LSR A"); \
+    __asm__("ROL %v+3", report);
   LOOP(8);
   #undef LOOP_CODE
 
