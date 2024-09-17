@@ -49,14 +49,16 @@ void __fastcall__ mouse_update(void) {
   __asm__("nop");
 
   // Read 32 bits from the mouse into the report array using unrolled loops
-  // NOTE: Each read should take at least 14 CPU cycles, so make sure to check
-  //       the compiler listings and add asm "nop" instructions if necessary!
+  // NOTE: Each read should take at least 14 CPU cycles and there should be
+  //       at least 28 CPU cycles between the 2nd and 3rd bytes.
 
   // Get the first byte
   #define LOOP_CODE(_i) \
     __asm__("LDA %w", MOUSE_PORT); \
     __asm__("LSR A"); \
-    __asm__("ROL %v+0", report);
+    __asm__("ROL %v+0", report); \
+    __asm__("NOP"); \
+    __asm__("NOP");
   LOOP(8);
   #undef LOOP_CODE
 
@@ -64,13 +66,14 @@ void __fastcall__ mouse_update(void) {
   #define LOOP_CODE(_i) \
     __asm__("LDA %w", MOUSE_PORT); \
     __asm__("LSR A"); \
-    __asm__("ROL %v+1", report);
+    __asm__("ROL %v+1", report); \
+    __asm__("NOP"); \
+    __asm__("NOP");
   LOOP(8);
   #undef LOOP_CODE
 
   // Wait a few more CPU cycles for
   // Hyperkin mouse compatibility
-  __asm__("nop"); __asm__("nop");
   __asm__("nop"); __asm__("nop");
 
   // Set mouse connection state
@@ -83,7 +86,9 @@ void __fastcall__ mouse_update(void) {
   #define LOOP_CODE(_i) \
     __asm__("LDA %w", MOUSE_PORT); \
     __asm__("LSR A"); \
-    __asm__("ROL %v+2", report);
+    __asm__("ROL %v+2", report); \
+    __asm__("NOP"); \
+    __asm__("NOP");
   LOOP(8);
   #undef LOOP_CODE
 
@@ -91,7 +96,9 @@ void __fastcall__ mouse_update(void) {
   #define LOOP_CODE(_i) \
     __asm__("LDA %w", MOUSE_PORT); \
     __asm__("LSR A"); \
-    __asm__("ROL %v+3", report);
+    __asm__("ROL %v+3", report); \
+    __asm__("NOP"); \
+    __asm__("NOP");
   LOOP(8);
   #undef LOOP_CODE
 
