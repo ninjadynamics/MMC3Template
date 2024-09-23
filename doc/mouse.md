@@ -1,142 +1,270 @@
 # mouse.c
 
-The `mouse` module provides functionality to interface with a mouse peripheral on an NES system. It includes initialization, updating the mouse state, and handling both click and press events for the left and right mouse buttons. The module is designed to work with a mouse connected to either the first or second controller port.
+## Overview
 
-## API Reference
+The NES MMC3 Mouse Module provides functionality to integrate and manage a mouse peripheral (SNES/Hyperkin) within NES projects utilizing the MMC3 mapper. This module handles mouse initialization, state updates, and interaction, enabling precise cursor control and button handling. It is designed to work seamlessly alongside standard NES controllers, with specific requirements for the order of input reading to ensure accurate mouse data processing.
 
-### Data Structures
+## Table of Contents
 
-- **`MouseButton`**: Represents the state of a mouse button.
-    - `bool press`: Indicates if the button is currently pressed.
-    - `bool click`: Indicates if the button was clicked (pressed down after being released).
+1. [Module Components](#module-components)
+   - [Constants](#constants)
+   - [Data Structures](#data-structures)
+2. [Function Reference](#function-reference)
+   - [Initialization](#initialization)
+   - [State Management](#state-management)
+3. [Usage Guidelines](#usage-guidelines)
+   - [Integration with Main Program](#integration-with-main-program)
+   - [Input Reading Order](#input-reading-order)
+4. [Example Usage](#example-usage)
+5. [Additional Notes](#additional-notes)
 
-- **`Mouse`**: Represents the overall mouse state.
-    - `uint8_t x`: The current X position of the mouse cursor.
-    - `uint8_t y`: The current Y position of the mouse cursor.
-    - `MouseButton left`: State of the left mouse button.
-    - `MouseButton right`: State of the right mouse button.
-    - `bool connected`: Indicates if the mouse is currently connected.
+---
+
+## Module Components
 
 ### Constants
 
-- `MIN_X`, `MAX_X`: The minimum and maximum X coordinates for the mouse cursor.
-- `MIN_Y`, `MAX_Y`: The minimum and maximum Y coordinates for the mouse cursor.
+The module defines the following constants to constrain mouse movement within the NES screen boundaries:
 
-### Global Variables
-
-- `Mouse mouse`: An instance of the `Mouse` structure that holds the current state of the mouse. This variable is available globally and is placed in the zero-page memory for faster access.
-
-### Functions
-
-- **`void __fastcall__ mouse_init(uint8_t x, uint8_t y);`**
-
-    Initializes the mouse with a starting position. This function sets the initial cursor position and clears the mouse button states.
-
-    - `x`: Initial X position of the mouse cursor.
-    - `y`: Initial Y position of the mouse cursor.
-
-- **`void __fastcall__ mouse_clear(void);`**
-
-    Clears the mouse button states. This function is typically used during initialization to reset the `press` and `click` states of both left and right mouse buttons.
-
-- **`void __fastcall__ mouse_update(void);`**
-
-    Updates the mouse state by reading data from the mouse peripheral. This function should be called regularly (e.g., once per frame) to ensure the mouse state is kept up to date.
-
-    - It reads 32 bits of data from the mouse, updates the cursor position, and checks the button states.
-    - Sets the `connected` flag in the `Mouse` structure to indicate whether the mouse is properly connected and recognized.
-
-## Usage
-
-1. **Initialization**:
-
-    Before using the mouse, initialize it with a starting position:
-
-    ```c
-    mouse_init(128, 120); // Initializes mouse at the center of the screen (x=128, y=120)
-    ```
-
-2. **Updating the Mouse State**:
-
-    Call `mouse_update()` once per frame to update the mouse state. This function will handle reading data from the mouse, updating the cursor position, and detecting button presses and clicks.
-
-    ```c
-    while (1) {
-        mouse_update();
-        
-        // Use mouse.x, mouse.y for cursor position
-        // Use mouse.left.press, mouse.left.click for left button state
-        // Use mouse.right.press, mouse.right.click for right button state
-
-        // Example: Check for left click
-        if (mouse.left.click) {
-            // Handle left click event
-        }
-        
-        // Other game logic...
-    }
-    ```
-
-3. **Clearing Mouse State**:
-
-    If you need to reset the mouse button states, use `mouse_clear()`:
-
-    ```c
-    mouse_clear();
-    ```
-
-## Internal Functionality
-
-- **Port Latching**: The `mouse_update()` function begins by latching the data by writing to the `LATCH_PORT` (always `0x4016`), which tells the mouse to prepare its data for reading.
+- **`MIN_X`**: Minimum X-coordinate value for the mouse cursor.  
+  ```c
+  #define MIN_X 1
+  ```
   
-- **Data Reading**: The mouse data is read using the `PEEK()` function to get the data from either `DATA_PORT1` or `DATA_PORT2`, depending on the port the mouse is connected to. The `MOUSE_PORT` macro is used to determine which port to read from. This macro can be adjusted to switch between ports.
+- **`MAX_X`**: Maximum X-coordinate value for the mouse cursor.  
+  ```c
+  #define MAX_X 255
+  ```
+  
+- **`MIN_Y`**: Minimum Y-coordinate value for the mouse cursor.  
+  ```c
+  #define MIN_Y 1
+  ```
+  
+- **`MAX_Y`**: Maximum Y-coordinate value for the mouse cursor.  
+  ```c
+  #define MAX_Y 239
+  ```
 
-- **Button and Click Detection**: The module keeps track of both the press and click states of the left and right mouse buttons. A click is detected when a button press is registered after the button was previously released.
+### Data Structures
 
-- **Cursor Movement**: The cursor position is updated based on the displacement values read from the mouse. The position is bounded by `MIN_X`, `MAX_X`, `MIN_Y`, and `MAX_Y` to keep the cursor within the screen.
+#### `MouseButton`
 
-## Port Configuration
-
-- **MOUSE_PORT**: By default, `MOUSE_PORT` is set to `DATA_PORT1`. To switch to port 2, change this definition to `DATA_PORT2`. This change will affect where `mouse_update()` reads the mouse data from.
+Represents the state of a mouse button.
 
 ```c
-#define MOUSE_PORT DATA_PORT2 // Use this to switch to the second port
+typedef struct MouseButton {
+  bool press;  // Indicates if the button is currently pressed
+  bool click;  // Indicates if the button was clicked (pressed in the current update cycle)
+} MouseButton;
 ```
 
-## Example
+- **Fields:**
+  - `press`: `true` if the button is held down; `false` otherwise.
+  - `click`: `true` if the button was clicked during the latest update cycle; `false` otherwise.
 
-Here is an example of how to use the mouse module in a typical game loop:
+#### `Mouse`
+
+Encapsulates the overall state of the mouse, including position, button states, and connection status.
 
 ```c
-#include "mouse.h"
+typedef struct Mouse {
+  uint8_t x, y;           // Current X and Y coordinates of the mouse cursor
+  MouseButton left;      // State of the left mouse button
+  MouseButton right;     // State of the right mouse button
+  bool connected;        // Connection status of the mouse
+} Mouse;
+```
 
-void main(void) {
-    // Initialize mouse at position (128, 120)
-    mouse_init(128, 120);
-    
-    // Main game loop
-    while (1) {
-        mouse_update(); // Update mouse state
-        
-        // Use mouse coordinates
-        uint8_t cursor_x = mouse.x;
-        uint8_t cursor_y = mouse.y;
-        
-        // Handle mouse click
-        if (mouse.left.click) {
-            // Perform action on left click
-        }
-        
-        // Other game logic...
+- **Fields:**
+  - `x`, `y`: Current position of the mouse cursor on the screen.
+  - `left`, `right`: Instances of `MouseButton` representing the left and right mouse buttons.
+  - `connected`: `true` if the mouse is connected and functioning; `false` otherwise.
 
-        // Wait for the next frame
-        // wait_for_vsync();
-    }
+### External Variables
+
+- **`mouse`**: An instance of the `Mouse` structure representing the current state of the mouse.
+  ```c
+  extern Mouse mouse;
+  ```
+
+## Function Reference
+
+### Initialization
+
+#### `mouse_init`
+
+Initializes the mouse module by setting the initial cursor position and clearing the mouse state.
+
+```c
+extern void __fastcall__ mouse_init(uint8_t x, uint8_t y);
+```
+
+- **Parameters:**
+  - `x`: Initial X-coordinate for the mouse cursor.
+  - `y`: Initial Y-coordinate for the mouse cursor.
+
+- **Description:**
+  Sets the mouse's initial position to the specified `x` and `y` coordinates and clears any existing mouse state, ensuring a fresh start for mouse interaction.
+
+### State Management
+
+#### `mouse_clear`
+
+Resets the mouse button states, indicating that no buttons are pressed or clicked.
+
+```c
+extern void __fastcall__ mouse_clear(void);
+```
+
+- **Description:**
+  Clears the current state of both left and right mouse buttons, setting `press` and `click` flags to `false`.
+
+#### `mouse_update`
+
+Updates the mouse state by reading data from the mouse hardware, processing movement and button states.
+
+```c
+extern void __fastcall__ mouse_update(void);
+```
+
+- **Description:**
+  - **Data Latching:** Initiates data latching by toggling the latch port, ensuring that a fresh set of mouse data is ready for reading.
+  - **Data Reading:** Reads 32 bits of data from the mouse port into the `report` array, handling each byte individually.
+  - **Connection Check:** Verifies if the mouse is properly connected by inspecting specific bits in the report data.
+  - **Button States:** Updates the `press` and `click` states for both left and right mouse buttons based on the latest data.
+  - **Velocity Calculation:** Calculates the X and Y velocity (displacement) from the report data, converting from two's complement if necessary.
+  - **Position Update:** Adjusts the mouse cursor's position (`mouse.x` and `mouse.y`) based on the calculated velocities, ensuring the cursor remains within defined screen boundaries.
+  - **Connection Status:** Sets `mouse.connected` to `true` if data was successfully read and processed; otherwise, sets it to `false`.
+
+---
+
+## Usage Guidelines
+
+### Integration with Main Program
+
+To effectively utilize the mouse module within your NES project, follow these integration steps:
+
+1. **Include Headers:**
+   Ensure that `mouse.h` is included in your main program source file.
+   ```c
+   #include "mouse.h"
+   ```
+
+2. **Initialize Mouse:**
+   Call `mouse_init` during the initial setup phase to set the starting position of the mouse cursor.
+   ```c
+   mouse_init(initial_x, initial_y);
+   ```
+
+3. **Update Mouse State:**
+   In your main loop, invoke `mouse_update` to refresh the mouse state based on the latest hardware input.
+   ```c
+   while (1) {
+     mouse_update();
+     // ... other code ...
+   }
+   ```
+
+4. **Handle Mouse Data:**
+   After updating, utilize the `mouse` structure to access the current cursor position and button states for rendering or game logic.
+
+### Input Reading Order
+
+**Critical:** The mouse data must be read **before** reading any controller inputs. This order is essential to ensure accurate and timely processing of mouse data. Reading the mouse first prevents controller input routines from inadvertently interfering with the mouse data stream.
+
+**Implementation Example:**
+
+```c
+while (1) {
+  oam_clear();
+
+  // Update mouse state first
+  mouse_update();
+
+  // Then read controller inputs
+  pt = pad_trigger(PAD_1);
+  pp = pad_poll(PAD_1);
+
+  // Proceed with rendering and game logic
+  show_cursor();
+  show_player_sprite();
+  show_status();
+
+  ppu_wait_nmi();
 }
 ```
 
-## Notes
+---
 
-- The mouse module uses unrolled loops and assembly NOP instructions to ensure proper timing when reading from the mouse. This ensures compatibility with different mouse models, including the Hyperkin mouse.
-- The module currently assumes the mouse is connected to port 1. To use port 2, change the `MOUSE_PORT` definition or introduce a configuration setting to select the port at runtime.
-- This module is designed for the NES environment, where direct hardware access and precise timing are critical.
+## Example Usage
+
+Below is a simplified example demonstrating how to integrate and utilize the MMC3 Mouse Module within a main program:
+
+```c
+#include "core.h"
+#include "mmc3.h"
+#include "neslib.h"
+#include "mouse.h"
+
+// Main function
+void main(void) {
+  // Initialize graphics, sound, etc.
+  // ...
+
+  // Initialize mouse at the center of the screen
+  mouse_init(128, 120);
+
+  // Enable rendering
+  ppu_on_all();
+
+  // Main loop
+  while (1) {
+    // Clear previous sprites
+    oam_clear();
+
+    // Update mouse state before reading controller
+    mouse_update();
+
+    // Read controller inputs
+    pt = pad_trigger(PAD_1);
+    pp = pad_poll(PAD_1);
+
+    // Render mouse cursor
+    show_cursor();
+
+    // Render player sprite based on controller input
+    show_player_sprite();
+
+    // Display status information
+    show_status();
+
+    // Wait for the next frame
+    ppu_wait_nmi();
+  }
+}
+```
+
+**Key Points:**
+
+- **Initialization:** The mouse is initialized at coordinates `(128, 120)`, positioning it at the center of a standard NES screen.
+- **Update Sequence:** `mouse_update()` is called **before** any controller input functions (`pad_trigger` and `pad_poll`), adhering to the required input reading order.
+- **Rendering:** Functions like `show_cursor()`, `show_player_sprite()`, and `show_status()` utilize the updated mouse state to render visuals and handle game logic accordingly.
+
+---
+
+## Additional Notes
+
+- **Port Configuration:** By default, the mouse is connected to `DATA_PORT2` (0x4017). If your setup requires a different port or autodetection, consider modifying the `MOUSE_PORT` definition or implementing additional logic to handle port configuration dynamically.
+
+  ```c
+  #define MOUSE_PORT DATA_PORT2
+  ```
+
+- **Compatibility:** The `mouse_update` function includes specific handling to ensure compatibility with Hyperkin mice. Ensure that your mouse hardware aligns with these compatibility requirements or adjust the implementation as necessary.
+
+- **Performance Considerations:** The `mouse_update` function uses inline assembly to efficiently read and process mouse data. This approach minimizes CPU cycles and ensures timely updates, which is crucial for maintaining responsive cursor movement and button handling within the NES's limited processing environment.
+
+- **Memory Management:** The module utilizes the "ZEROPAGE" memory section for variables like `new_x`, `new_y`, `x_velocity`, `y_velocity`, and `report` to optimize access speed. Ensure that your project configuration supports zero-page memory allocation as used in this module.
+
+- **Extensibility:** While the current implementation supports basic mouse functionality, consider extending the module to handle additional mouse buttons or enhanced features like scroll wheels if your hardware and project requirements necessitate such capabilities.
