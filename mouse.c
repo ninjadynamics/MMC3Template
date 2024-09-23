@@ -8,7 +8,7 @@
 
 // If the mouse is connected on the second
 // controller port, use DATA_PORT2 instead
-#define MOUSE_PORT DATA_PORT1
+#define MOUSE_PORT DATA_PORT2
 // NOTE: If you wish to autodetect the mouse port or
 // make configurable, you can use a variable instead
 

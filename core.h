@@ -371,4 +371,10 @@
 // Bool
 typedef enum { false, true } bool;
 
+// Gamepads
+typedef enum { PAD_1, PAD_2 };
+
+// Byte
+typedef unsigned char byte;
+
 #endif // core.h
