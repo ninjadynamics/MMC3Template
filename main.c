@@ -158,10 +158,10 @@ void main(void) {
     // Clear sprites
     oam_clear();
 
-    // Read the mouse after the controller
+    // Read the mouse BEFORE the controller!!!
     mouse_update(); // Assuming it's connected on port 2
 
-    // Read controller before the mouse
+    // Read controller AFTER the mouse!!!
     pt = pad_trigger(PAD_1);
     pp = pad_poll(PAD_1);
 
