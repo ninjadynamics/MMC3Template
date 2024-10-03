@@ -55,7 +55,7 @@ void __fastcall__ mmc3_famitone_update_nmi(void) {
   famitone_update();
 
   // Fix things up
-  POKE(0x8000, MMC_MODE | (mmc3_register));
+  POKE(0x8000, A12_INVERSION | (mmc3_register));
   POKE(0x8001, mmc3_cpu_bank);
 }
 

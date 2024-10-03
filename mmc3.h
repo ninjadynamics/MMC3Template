@@ -5,12 +5,10 @@
 #include <nes.h>
 
 #include "core.h"
-
-// Must match A12_INVERSION in crt0.s
-#define MMC_MODE 0x80
+#include "options.h"
 
 #define MMC3_SET_REG(r, n) ( \
-  POKE(0x8000, MMC_MODE | (r)),\
+  POKE(0x8000, A12_INVERSION | (r)),\
   POKE(0x8001, (n)) \
 )
 

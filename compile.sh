@@ -1,5 +1,14 @@
 #!/bin/bash
 
+OPTION_LINE_MATCH='^[\s]*[^#\[;]*=.*$'
+while IFS= read -r line; do
+  ! [[ $line =~ $OPTION_LINE_MATCH ]] && continue
+  options+=" -D $(echo $line | tr -d '\r')"
+#   echo "line: ${line}"
+done < build_options.ini
+
+# echo "options: ${options} "
+
 # Get the project name
 name="$1"
 if [[ "$name" = "" ]]; then
@@ -22,7 +31,7 @@ done
 # Compile the C sources
 # into assembly files
 for f in $src; do
-    cc65 -D OFFLINE_COMPILER -Or -g -j $f --add-source --target nes
+    cc65 -D OFFLINE_COMPILER ${options} -Oisr -g -j --add-source --target nes $f
 done
 
 # Compile the project's assembly
@@ -30,7 +39,7 @@ done
 asm=`echo *.s`
 cmd='head -n 1 $f | grep -i compile > /dev/null'
 for f in $asm; do
-    eval $cmd && ca65 $f --feature string_escapes
+    eval $cmd && ca65 ${options} -g --feature string_escapes $f 
 done
 
 # Compile the generated assembly

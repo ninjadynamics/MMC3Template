@@ -369,10 +369,12 @@
 #define STR(s) _STR(s)
 
 // Bool
+#ifdef __NES__
 typedef enum { false, true } bool;
+#endif
 
 // Gamepads
-typedef enum { PAD_1, PAD_2 };
+enum { PAD_1, PAD_2 };
 
 // Byte
 typedef unsigned char byte;

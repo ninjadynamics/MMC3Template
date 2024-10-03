@@ -3,22 +3,6 @@
 ; Startup code for cc65 and Shiru's NES library
 ; based on code by Groepaz/Hitmen <groepaz@gmx.net>, Ullrich von Bassewitz <uz@cc65.org>
 
-A12_INVERSION = $80     ;must match MMC_MODE in mmc3.h
-
-FT_BASE_ADR = $0300     ;page in RAM, should be $xx00
-FT_DPCM_OFF = $c000     ;$c000..$ffc0, 64-byte steps
-FT_SFX_STREAMS  = 4     ;number of sound effects played at once, 1..4
-
-FT_THREAD       = 1     ;undefine if you call sound effects in the same thread as sound update
-FT_PAL_SUPPORT  = 0     ;undefine to exclude PAL support (either PAL or NTSC - do NOT enable both!)
-FT_NTSC_SUPPORT = 1     ;undefine to exclude NTSC support (either PAL or NTSC - do NOT enable both!)
-FT_DPCM_ENABLE  = 0     ;undefine to exclude all DMC code
-FT_SFX_ENABLE   = 1     ;undefine to exclude all sound effects code
-
-FT_BANKED_MUSIC = 1     ;undefine if there is no need for music bank switching
-FT_BANKED_SFX   = 1     ;undefine if there is no need for sound effects bank switching
-FT_BANKED_DPCM  = 0     ;undefine if there is no need for samples bank switching
-
 ;REMOVED initlib
 ;this called the CONDES function
 
@@ -33,7 +17,6 @@ FT_BANKED_DPCM  = 0     ;undefine if there is no need for samples bank switching
     .import __RODATA_LOAD__ ,__RODATA_RUN__ ,__RODATA_SIZE__
     .import NES_MAPPER, NES_PRG_BANKS, NES_CHR_BANKS, NES_MIRRORING, NES_BATTERY
 
-    .importzp _PAD_STATE, _PAD_STATET ;added
     .include "zeropage.inc"
 
 
@@ -73,9 +56,9 @@ SCROLL_X:           .res 1
 SCROLL_Y:           .res 1
 SCROLL_X1:          .res 1
 SCROLL_Y1:          .res 1
-PAD_STATE:          .res 2      ;one byte per controller
-PAD_STATEP:         .res 2
-PAD_STATET:         .res 2
+; PAD_STATE:          .res 2      ;one byte per controller
+; PAD_STATEP:         .res 2
+; PAD_STATET:         .res 2
 PPU_CTRL_VAR:       .res 1
 PPU_CTRL_VAR1:      .res 1
 PPU_MASK_VAR:       .res 1

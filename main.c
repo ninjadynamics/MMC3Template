@@ -31,16 +31,17 @@
 #include "neslib.h"
 #include "mouse.h"
 
-// Gamepad readings
-static byte pt, pp;
-
 // Player sprite
 static uint8_t px, py;
+static uint8_t temp1;
+static uint8_t temp2;
+static uint8_t temp3;
+static uint8_t temp4;
 
 void __fastcall__ show_status(void) {
   #define X(x) (x * 8)
   #define Y(y) (y * 8) - 1
-  uint8_t v[3];
+  #define v ((uint8_t*)&temp1)
 
   // Show mouse coordinates
   // - - - - - - - - - - - - - - - - - -
@@ -60,26 +61,27 @@ void __fastcall__ show_status(void) {
 
   // Show mouse button presses
   // - - - - - - - - - - - - - - - - - -
-  oam_spr(X(25), Y(2), mouse.left.press * 0x7F, 3);
-  oam_spr(X(28), Y(2), mouse.right.press * 0x7F, 2);
+  oam_spr(X(25), Y(2), mouse.left * 0x7F, 3);
+  oam_spr(X(28), Y(2), mouse.right * 0x7F, 2);
 
   // Show gamepad status
   // - - - - - - - - - - - - - - - - - -
-  oam_spr(X(20), Y(24), 0x1C, 2 * to_bool(pp & PAD_UP    ));
-  oam_spr(X(20), Y(26), 0x1D, 2 * to_bool(pp & PAD_DOWN  ));
-  oam_spr(X(19), Y(25), 0x1E, 2 * to_bool(pp & PAD_LEFT  ));
-  oam_spr(X(21), Y(25), 0x1F, 2 * to_bool(pp & PAD_RIGHT ));
-  oam_spr(X(23), Y(25), 0x1B, 2 * to_bool(pp & PAD_SELECT));
-  oam_spr(X(25), Y(25), 0x1A, 2 * to_bool(pp & PAD_START ));
-  oam_spr(X(27), Y(25), 0x42, 2 * to_bool(pp & PAD_B     ));
-  oam_spr(X(29), Y(25), 0x41, 2 * to_bool(pp & PAD_A     ));
+  oam_spr(X(20), Y(24), 0x1C, 2 * joypad1.up    );
+  oam_spr(X(20), Y(26), 0x1D, 2 * joypad1.down  );
+  oam_spr(X(19), Y(25), 0x1E, 2 * joypad1.left  );
+  oam_spr(X(21), Y(25), 0x1F, 2 * joypad1.right );
+  oam_spr(X(23), Y(25), 0x1B, 2 * joypad1.select);
+  oam_spr(X(25), Y(25), 0x1A, 2 * joypad1.start );
+  oam_spr(X(27), Y(25), 0x42, 2 * joypad1.b     );
+  oam_spr(X(29), Y(25), 0x41, 2 * joypad1.a     );
   #undef X
   #undef Y
+  #undef v
 }
 
 void __fastcall__ show_player_sprite(void) {
-  if (pp & PAD_RIGHT) ++px; else if (pp & PAD_LEFT) --px;
-  if (pp & PAD_DOWN ) ++py; else if (pp & PAD_UP  ) --py;
+  if (joypad1.right) ++px; else if (joypad1.left) --px;
+  if (joypad1.down ) ++py; else if (joypad1.up  ) --py;
   oam_spr(px, py, 0xB1, 3);
 }
 
@@ -123,22 +125,22 @@ void main(void) {
   // Draw static text
   #define TEXT "X:"
   vram_adr(NTADR_A(2, 2));
-  vram_write(TEXT, sizeof(TEXT));
+  vram_write((const unsigned char *)TEXT, sizeof(TEXT));
   #undef TEXT
 
   #define TEXT "Y:"
   vram_adr(NTADR_A(2, 4));
-  vram_write(TEXT, sizeof(TEXT));
+  vram_write((const unsigned char *)TEXT, sizeof(TEXT));
   #undef TEXT
 
   #define TEXT "[ ][ ]"
   vram_adr(NTADR_A(24, 2));
-  vram_write(TEXT, sizeof(TEXT));
+  vram_write((const unsigned char *)TEXT, sizeof(TEXT));
   #undef TEXT
 
   #define TEXT "HELLO WORLD!"
   vram_adr(NTADR_A(2, 25));
-  vram_write(TEXT, sizeof(TEXT));
+  vram_write((const unsigned char *)TEXT, sizeof(TEXT));
   #undef TEXT
 
   // Enable rendering
@@ -157,13 +159,6 @@ void main(void) {
   while (1) {
     // Clear sprites
     oam_clear();
-
-    // Read the mouse BEFORE the controller!!!
-    mouse_update(); // Assuming it's connected on port 2
-
-    // Read controller AFTER the mouse!!!
-    pt = pad_trigger(PAD_1);
-    pp = pad_poll(PAD_1);
 
     // Display mouse cursor
     show_cursor();
