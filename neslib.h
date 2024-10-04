@@ -20,9 +20,10 @@
 // 060414 - many fixes and improvements, including sequental VRAM updates
 // previous versions were created since mid-2011, there were many updates
 
+#ifndef __NES__
+#define __fastcall__ 
+#endif
 
-//get boolean value
-unsigned char __fastcall__ to_bool(unsigned char x);
 
 //set bg and spr palettes, data is 32 bytes array
 void __fastcall__ pal_all(const unsigned char *data);
@@ -139,17 +140,57 @@ void __fastcall__ sample_play(unsigned char sample);
 void __fastcall__ famitone_update(void);
 
 
+struct pad {
+    union {
+        unsigned char hold;
+        struct {
+            unsigned char right : 1;
+            unsigned char left : 1;
+            unsigned char down : 1;
+            unsigned char up : 1;
+            unsigned char start : 1;
+            unsigned char select : 1;
+            unsigned char b : 1;
+            unsigned char a : 1;
+        };
+    };
+    union {
+        unsigned char press;
+        struct {
+            unsigned char press_right : 1;
+            unsigned char press_left : 1;
+            unsigned char press_down : 1;
+            unsigned char press_up : 1;
+            unsigned char press_start : 1;
+            unsigned char press_select : 1;
+            unsigned char press_b : 1;
+            unsigned char press_a : 1;
+        };
+    };
+    union {
+        unsigned char release;
+        struct {
+            unsigned char release_right : 1;
+            unsigned char release_left : 1;
+            unsigned char release_down : 1;
+            unsigned char release_up : 1;
+            unsigned char release_start : 1;
+            unsigned char release_select : 1;
+            unsigned char release_b : 1;
+            unsigned char release_a : 1;
+        };
+    };
+};
 
-//poll controller and return flags like PAD_LEFT etc, input is pad number (0 or 1)
-unsigned char __fastcall__ pad_poll(unsigned char pad);
+extern struct pad joypad1;
+#pragma zpsym("joypad1");
 
-//poll controller in trigger mode, a flag is set only on button down, not hold
-//if you need to poll the pad in both normal and trigger mode, poll it in the
-//trigger mode for first, then use pad_state
-unsigned char __fastcall__ pad_trigger(unsigned char pad);
+#if !USE_MOUSE_SUPPORT
 
-//get previous pad state without polling ports
-unsigned char __fastcall__ pad_state(unsigned char pad);
+extern struct pad joypad2;
+#pragma zpsym("joypad2");
+
+#endif
 
 
 
@@ -243,6 +284,18 @@ void __fastcall__ nmi_set_callback(void (*callback)(void));
 //clear NMI/IRQ callback
 void __fastcall__ nmi_clear_callback(void);
 
+//get boolean value
+// unsigned char __fastcall__ to_bool(unsigned char x);
+#ifdef __NES__
+#define to_bool(x) \
+    (__A__ = ((unsigned char)(x)), \
+    asm("cmp #1"),\
+    asm("lda #0"),\
+    asm("rol"),\
+    __A__)
+#else
+#define to_bool(x) ((unsigned char)(!!(x)))
+#endif
 
 #define PAD_A			0x80
 #define PAD_B			0x40
